@@ -1,0 +1,13 @@
+<div class="card row">
+  <div>
+    <h3>{{ $ctrl.reservation.code }}</h3>
+    <p class="muted">{{ $ctrl.reservation.guests }} {{ $ctrl.reservation.guests === 1 ? 'guest' : 'guests' }} · Table {{ $ctrl.reservation.table.label }} · {{ $ctrl.zoneNames[$ctrl.reservation.table.zone] }}</p>
+    <p class="muted">{{ $ctrl.fmtDate($ctrl.reservation.date) }} · {{ $ctrl.fmtTime($ctrl.reservation.time) }} to {{ $ctrl.fmtTime($ctrl.reservation.endTime) }}</p>
+    <p class="muted" ng-if="$ctrl.showCustomer">{{ $ctrl.reservation.name }} · {{ $ctrl.reservation.phone }} · {{ $ctrl.reservation.email }}</p>
+    <p class="muted" ng-if="$ctrl.reservation.requests">Note: {{ $ctrl.reservation.requests }}</p>
+  </div>
+  <div class="actions-col">
+    <span class="pill" ng-class="{ off: $ctrl.reservation.status === 'cancelled' }">{{ $ctrl.reservation.status === 'confirmed' ? 'Confirmed' : 'Cancelled' }}</span>
+    <button class="btn danger sm" type="button" ng-if="$ctrl.canCancel()" ng-disabled="$ctrl.busy" ng-click="$ctrl.onCancel()">{{ $ctrl.busy ? 'Cancelling…' : 'Cancel' }}</button>
+  </div>
+</div>

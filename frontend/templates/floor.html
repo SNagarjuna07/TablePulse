@@ -1,0 +1,43 @@
+<section>
+  <h2>Live floor plan</h2>
+  <p class="muted" style="margin-bottom:20px;">Table availability on {{ $ctrl.fmtDate($ctrl.date) }} at {{ $ctrl.time ? $ctrl.fmtTime($ctrl.time) : '…' }}.</p>
+
+  <div class="error" role="alert" ng-if="!$ctrl.cfg">Restaurant settings could not be loaded. Check that the server is running.</div>
+
+  <div ng-if="$ctrl.cfg">
+    <div class="toolbar">
+      <label>Date
+        <input type="date" ng-model="$ctrl.dateObj" ng-change="$ctrl.onDateChange()">
+      </label>
+      <label>Time
+        <select ng-model="$ctrl.time" ng-change="$ctrl.onTimeChange()" ng-options="s as $ctrl.fmtTime(s) for s in $ctrl.slots"></select>
+      </label>
+    </div>
+
+    <div class="legend">
+      <span ng-repeat="s in $ctrl.legend"><i class="dot" ng-class="'st-' + s"></i>{{ s }} ({{ $ctrl.counts[s] }})</span>
+    </div>
+
+    <p class="muted hint-small" style="margin-bottom:14px;" ng-if="$ctrl.isToday()">Today: mark a table Occupied or Cleaning to hold it back from new bookings that start in the next 2 hours.</p>
+    <p class="muted hint-small" style="margin-bottom:14px;" ng-if="!$ctrl.isToday()">Occupied and Cleaning can only be set for today. Other dates show reservations only.</p>
+
+    <div class="error" role="alert" ng-if="$ctrl.error">{{ $ctrl.error }}</div>
+
+    <p class="muted" aria-live="polite" ng-if="$ctrl.loading && !$ctrl.floor.length">Loading floor…</p>
+
+    <div class="floor-grid" ng-if="$ctrl.floor.length">
+      <div class="tcard" ng-repeat="slot in $ctrl.floor track by slot.table.id" ng-class="'st-' + slot.state">
+        <div class="tcard-head">
+          <h3>{{ slot.table.label }}</h3>
+          <span class="pill-state">{{ slot.state }}</span>
+        </div>
+        <p class="muted">{{ $ctrl.zoneNames[slot.table.zone] }} · Seats {{ slot.table.cap }}</p>
+        <p class="tcard-res" ng-if="slot.reservation">{{ slot.reservation.name }} · {{ slot.reservation.guests }} guests<br>{{ $ctrl.fmtTime(slot.reservation.time) }} to {{ $ctrl.fmtTime(slot.reservation.endTime) }}</p>
+        <div class="tcard-actions" ng-if="$ctrl.isToday()">
+          <button type="button" class="btn ghost sm" ng-repeat="st in $ctrl.manualOptions"
+                  ng-disabled="$ctrl.busyId === slot.table.id || slot.state === st" ng-click="$ctrl.setStatus(slot, st)">{{ st }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

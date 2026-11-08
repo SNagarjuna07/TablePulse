@@ -1,0 +1,97 @@
+<!-- Hero -->
+<section class="hero">
+  <div>
+    <span class="badge">Your table, thoughtfully chosen.</span>
+    <h1>Good evenings start with the right table.</h1>
+    <p class="lead">A calmer way to plan your next meal. Find your place, choose your moment, and let the evening unfold.</p>
+    <div class="actions">
+      <a class="btn" href="#!/reserve">Find Your Table</a>
+      <a class="btn ghost" href="" ng-click="$ctrl.scrollTo('how')">Discover TablePulse</a>
+    </div>
+  </div>
+  <div class="visual" tp-reveal>
+    <div class="float f1"><strong>Table T04</strong>Window side · seats 4</div>
+    <div class="float f2"><strong>96% match</strong>Chosen by FlowSense</div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section class="block" id="how">
+  <h2>How It Works</h2>
+  <p class="lead">Three simple steps from plan to table.</p>
+  <div class="steps">
+    <div class="card" tp-reveal reveal-delay="0">
+      <div class="step-no">01</div>
+      <h3>Tell Us Your Plan</h3>
+      <p class="muted">Choose your date, time, guest count and seating preference.</p>
+    </div>
+    <div class="card" tp-reveal reveal-delay="120">
+      <div class="step-no">02</div>
+      <h3>Meet FlowSense</h3>
+      <p class="muted">Our smart seating assistant finds a suitable table.</p>
+    </div>
+    <div class="card" tp-reveal reveal-delay="240">
+      <div class="step-no">03</div>
+      <h3>Enjoy the Moment</h3>
+      <p class="muted">Receive confirmation and enjoy your dining experience.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FlowSense -->
+<section class="block" id="experience">
+  <div class="flow" tp-reveal>
+    <div>
+      <span class="pill">Our innovation</span>
+      <h2 style="margin-top:14px;">Meet FlowSense. <span class="gold">Your table, in sync.</span></h2>
+      <p>FlowSense checks party size, seating preference and existing reservations, then explains why each table fits. It uses transparent rules, not a black box.</p>
+      <a class="btn" href="#!/reserve" style="margin-top:18px;">Try FlowSense</a>
+    </div>
+    <div class="rec">
+      <p class="muted">Sample recommendation</p>
+      <h3>Table T04</h3>
+      <div class="big">96% match</div>
+      <div class="bar"><i style="width:96%"></i></div>
+      <ul class="reasons">
+        <li>Seats 4, a perfect fit for your party</li>
+        <li>Window side, as you preferred</li>
+        <li>No overlapping reservation during your stay</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- For restaurants -->
+<section class="block" id="restaurants">
+  <div class="mgr">
+    <div tp-reveal>
+      <span class="pill">For restaurants</span>
+      <h2 style="margin-top:14px;">A clearer view of your floor.</h2>
+      <p class="lead">See which tables are free, reserved, seated, or being cleaned for any date and time, and cancel bookings from one dashboard.</p>
+      <a class="btn ghost" href="#!/floor" style="margin-top:18px;">Open the floor plan</a>
+    </div>
+    <div class="preview" tp-reveal reveal-delay="150">
+      <p class="muted" style="font-size:12px;margin-bottom:10px;">Sample data</p>
+      <div class="kpis">
+        <div class="kpi"><b>7</b><span>Available tables</span></div>
+        <div class="kpi"><b>3</b><span>Occupied tables</span></div>
+        <div class="kpi"><b>38</b><span>Guests today</span></div>
+        <div class="kpi"><b>2</b><span>Cancellations</span></div>
+      </div>
+      <div class="minifloor">
+        <i class="mini" ng-repeat="s in $ctrl.miniFloor track by $index" ng-class="'s-' + s"></i>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Final CTA -->
+<section class="block" tp-reveal>
+  <div class="cta">
+    <h2>Make room for good moments.</h2>
+    <p style="margin:10px auto 24px;max-width:460px;">Reserve your table in under a minute, and let FlowSense find the right seat.</p>
+    <a class="btn" href="#!/reserve">Reserve Your Table</a>
+  </div>
+</section>
+
+<p class="disclaimer">TablePulse is a portfolio demo. Reservations made here are not real restaurant bookings.</p>

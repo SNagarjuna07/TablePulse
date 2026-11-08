@@ -1,0 +1,104 @@
+<section>
+  <h2>Reserve your table</h2>
+  <p class="muted" style="margin-bottom:24px;">Fill in your plan and FlowSense will suggest the best tables for you.</p>
+
+  <!-- Confirmation -->
+  <div class="card ticket" ng-if="$ctrl.booking">
+    <span class="status">Confirmed</span>
+    <h3 style="margin-top:14px;">Booking confirmed</h3>
+    <p class="muted">Show this code when you arrive. This is a portfolio demo, not a real reservation.</p>
+    <dl>
+      <dt>Booking code</dt><dd>{{ $ctrl.booking.code }}</dd>
+      <dt>Guest</dt><dd>{{ $ctrl.booking.name }}</dd>
+      <dt>Guests</dt><dd>{{ $ctrl.booking.guests }}</dd>
+      <dt>Date</dt><dd>{{ $ctrl.fmtDate($ctrl.booking.date) }}</dd>
+      <dt>Time</dt><dd>{{ $ctrl.fmtTime($ctrl.booking.time) }} to {{ $ctrl.fmtTime($ctrl.booking.endTime) }}</dd>
+      <dt>Table</dt><dd>{{ $ctrl.booking.table.label }} ({{ $ctrl.zoneNames[$ctrl.booking.table.zone] }})</dd>
+    </dl>
+    <div class="actions">
+      <a class="btn" href="#!/my-reservations">View my reservations</a>
+      <button class="btn ghost" type="button" ng-click="$ctrl.startAgain()">Make another booking</button>
+    </div>
+  </div>
+
+  <!-- Server down -->
+  <div class="error" role="alert" ng-if="!$ctrl.booking && !$ctrl.cfg">
+    Restaurant settings could not be loaded. Check that the server is running.
+    <button class="btn sm" type="button" style="margin-left:10px;" ng-click="$ctrl.retryConfig()">Retry</button>
+  </div>
+
+  <div ng-if="!$ctrl.booking && $ctrl.cfg">
+    <form class="card form-grid" ng-submit="$ctrl.search()" novalidate>
+      <div class="error full" role="alert" ng-if="$ctrl.serverError">{{ $ctrl.serverError }}</div>
+
+      <label>Full name
+        <input name="name" ng-model="$ctrl.form.name" autocomplete="name" placeholder="Rani Jain">
+        <span class="field-error" ng-if="$ctrl.errors.name">{{ $ctrl.errors.name }}</span>
+      </label>
+      <label>Email
+        <input name="email" type="text" inputmode="email" ng-model="$ctrl.form.email" autocomplete="email" placeholder="you@example.com">
+        <span class="field-error" ng-if="$ctrl.errors.email">{{ $ctrl.errors.email }}</span>
+      </label>
+      <label>Phone
+        <input name="phone" type="tel" ng-model="$ctrl.form.phone" autocomplete="tel" placeholder="10-digit number">
+        <span class="field-error" ng-if="$ctrl.errors.phone">{{ $ctrl.errors.phone }}</span>
+      </label>
+      <label>Guests
+        <select name="guests" ng-model="$ctrl.form.guests" ng-change="$ctrl.onPlanChange()"
+                ng-options="n as $ctrl.guestLabel(n) for n in $ctrl.guestOptions"></select>
+        <span class="field-error" ng-if="$ctrl.errors.guests">{{ $ctrl.errors.guests }}</span>
+        <span class="hint-small">Parties above {{ $ctrl.cfg.maxPartySize }}: please call the restaurant.</span>
+      </label>
+      <label>Date
+        <input name="date" type="date" ng-model="$ctrl.dateObj" ng-change="$ctrl.onDateChange()">
+        <span class="field-error" ng-if="$ctrl.errors.date">{{ $ctrl.errors.date }}</span>
+      </label>
+      <label>Time
+        <select name="time" ng-model="$ctrl.form.time" ng-change="$ctrl.onPlanChange()"
+                ng-options="s.value as s.label disable when s.disabled for s in $ctrl.slotOptions">
+          <option value="">Select a time</option>
+        </select>
+        <span class="field-error" ng-if="$ctrl.errors.time">{{ $ctrl.errors.time }}</span>
+      </label>
+      <label class="full">Seating preference
+        <select name="pref" ng-model="$ctrl.form.pref" ng-change="$ctrl.onPlanChange()"
+                ng-options="p.value as p.label for p in $ctrl.prefOptions"></select>
+      </label>
+      <label class="full">Special requests
+        <input name="requests" ng-model="$ctrl.form.requests" placeholder="Optional">
+      </label>
+      <div class="full">
+        <button class="btn" type="submit" ng-disabled="$ctrl.loading">{{ $ctrl.loading ? 'Searching…' : 'Find my table' }}</button>
+      </div>
+    </form>
+
+    <div class="error" role="alert" style="margin-top:20px;"
+         ng-if="$ctrl.searched && !$ctrl.results.length && !$ctrl.loading && !$ctrl.serverError">
+      No table is free for {{ $ctrl.guestLabel($ctrl.form.guests) }} on {{ $ctrl.fmtDate($ctrl.form.date) }}
+      at {{ $ctrl.fmtTime($ctrl.form.time) }}. Please try another time.
+    </div>
+
+    <div style="margin-top:36px;" aria-live="polite" ng-if="$ctrl.results.length">
+      <h3>FlowSense recommendations</h3>
+      <p class="muted" style="margin-bottom:16px;">
+        Top matches for {{ $ctrl.guestLabel($ctrl.form.guests) }} on {{ $ctrl.fmtDate($ctrl.form.date) }}
+        at {{ $ctrl.fmtTime($ctrl.form.time) }}. Select one to confirm.
+      </p>
+      <div class="results-grid">
+        <div class="card" ng-repeat="rec in $ctrl.results track by rec.table.id">
+          <span class="pill" ng-if="$first">Best match</span>
+          <h3 style="margin-top:10px;">Table {{ rec.table.label }}</h3>
+          <p class="muted">{{ $ctrl.zoneNames[rec.table.zone] }} · Seats {{ rec.table.cap }}</p>
+          <div class="match">{{ rec.match }}% match</div>
+          <div class="bar"><i ng-style="{ width: rec.match + '%' }"></i></div>
+          <ul class="reasons">
+            <li ng-repeat="r in rec.reasons">{{ r }}</li>
+          </ul>
+          <button class="btn sm" type="button" style="margin-top:14px;" ng-disabled="$ctrl.creating !== null" ng-click="$ctrl.choose(rec)">
+            {{ $ctrl.creating === rec.table.id ? 'Booking…' : 'Select Table ' + rec.table.label }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

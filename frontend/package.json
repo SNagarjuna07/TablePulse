@@ -1,0 +1,12 @@
+{
+  "name": "tablepulse-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TablePulse frontend: AngularJS 1.8.2, plain JavaScript, no build step",
+  "scripts": {
+    "start": "http-server . -p 4200 -c-1 -P http://localhost:3000"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

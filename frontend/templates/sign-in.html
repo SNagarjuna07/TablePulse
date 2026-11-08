@@ -1,0 +1,31 @@
+<section class="card auth">
+  <div class="tabs" role="tablist" aria-label="Account">
+    <button type="button" role="tab" ng-class="{ active: $ctrl.mode === 'login' }" ng-attr-aria-selected="{{ $ctrl.mode === 'login' }}" ng-click="$ctrl.setMode('login')">Sign in</button>
+    <button type="button" role="tab" ng-class="{ active: $ctrl.mode === 'register' }" ng-attr-aria-selected="{{ $ctrl.mode === 'register' }}" ng-click="$ctrl.setMode('register')">Create account</button>
+  </div>
+
+  <h2>{{ $ctrl.mode === 'login' ? 'Welcome back' : 'Create your account' }}</h2>
+
+  <p class="hint" ng-if="$ctrl.mockMode">
+    Demo mode: data stays in this browser. Manager login:
+    <b>manager@tablepulse.demo</b> / <b>manager123</b>
+  </p>
+
+  <div class="error" role="alert" ng-if="$ctrl.error">{{ $ctrl.error }}</div>
+
+  <form ng-submit="$ctrl.submit()" novalidate>
+    <label ng-if="$ctrl.mode === 'register'">Full name
+      <input name="name" ng-model="$ctrl.form.name" autocomplete="name" placeholder="Rani Jain">
+      <span class="field-error" ng-if="$ctrl.errors.name">{{ $ctrl.errors.name }}</span>
+    </label>
+    <label>Email
+      <input name="email" type="text" inputmode="email" ng-model="$ctrl.form.email" autocomplete="email" placeholder="you@example.com">
+      <span class="field-error" ng-if="$ctrl.errors.email">{{ $ctrl.errors.email }}</span>
+    </label>
+    <label>Password
+      <input name="password" type="password" ng-model="$ctrl.form.password" ng-attr-autocomplete="{{ $ctrl.mode === 'login' ? 'current-password' : 'new-password' }}" placeholder="At least 8 characters">
+      <span class="field-error" ng-if="$ctrl.errors.password">{{ $ctrl.errors.password }}</span>
+    </label>
+    <button class="btn" type="submit" ng-disabled="$ctrl.busy">{{ $ctrl.busy ? 'Please wait…' : ($ctrl.mode === 'login' ? 'Sign in' : 'Create account') }}</button>
+  </form>
+</section>

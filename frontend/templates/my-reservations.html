@@ -1,0 +1,17 @@
+<section>
+  <h2>My reservations</h2>
+  <p class="muted" style="margin-bottom:24px;">Everything booked with your account.</p>
+
+  <div class="error" role="alert" ng-if="$ctrl.error">{{ $ctrl.error }}</div>
+
+  <p class="muted" aria-live="polite" ng-if="$ctrl.loading">Loading your reservations…</p>
+
+  <div class="list" ng-if="!$ctrl.loading && $ctrl.items.length">
+    <tp-reservation-item ng-repeat="r in $ctrl.items track by r.id"
+      reservation="r" busy="$ctrl.cancellingId === r.id" on-cancel="$ctrl.cancel(r)"></tp-reservation-item>
+  </div>
+
+  <div class="empty" ng-if="!$ctrl.loading && !$ctrl.items.length && !$ctrl.error">
+    You have no reservations yet. <a href="#!/reserve">Reserve a table</a>.
+  </div>
+</section>

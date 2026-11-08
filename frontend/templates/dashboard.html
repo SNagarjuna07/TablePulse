@@ -1,0 +1,27 @@
+<section>
+  <h2>Dashboard</h2>
+  <p class="muted" style="margin-bottom:20px;">Reservations for {{ $ctrl.fmtDate($ctrl.date) }}.</p>
+
+  <div class="toolbar">
+    <label>Date
+      <input type="date" ng-model="$ctrl.dateObj" ng-change="$ctrl.onDateChange()">
+    </label>
+  </div>
+
+  <div class="kpis kpis-row">
+    <div class="kpi"><b>{{ $ctrl.stats.confirmed }}</b><span>Confirmed bookings</span></div>
+    <div class="kpi"><b>{{ $ctrl.stats.guests }}</b><span>Guests expected</span></div>
+    <div class="kpi"><b>{{ $ctrl.stats.cancelled }}</b><span>Cancellations</span></div>
+  </div>
+
+  <div class="error" role="alert" ng-if="$ctrl.error">{{ $ctrl.error }}</div>
+
+  <p class="muted" aria-live="polite" ng-if="$ctrl.loading">Loading reservations…</p>
+
+  <div class="list" ng-if="!$ctrl.loading && $ctrl.items.length">
+    <tp-reservation-item ng-repeat="r in $ctrl.items track by r.id"
+      reservation="r" show-customer="true" busy="$ctrl.cancellingId === r.id" on-cancel="$ctrl.cancel(r)"></tp-reservation-item>
+  </div>
+
+  <div class="empty" ng-if="!$ctrl.loading && !$ctrl.items.length && !$ctrl.error">No reservations for this date.</div>
+</section>
