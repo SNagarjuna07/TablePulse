@@ -19,9 +19,47 @@ function timeOf(instant) {
   return DateTime.fromJSDate(instant, { zone: env.timeZone }).toFormat("HH:mm");
 }
 
-// Today's date in restaurant time, "YYYY-MM-DD"
-function restaurantToday() {
-  return DateTime.now().setZone(env.timeZone).toISODate();
+// Today's date in restaurant time, "YYYY-MM-DD" (pass "now" in tests to fake the clock)
+function restaurantToday(now = new Date()) {
+  return DateTime.fromJSDate(now).setZone(env.timeZone).toISODate();
 }
 
-module.exports = { toInstant, addMinutes, timeOf, restaurantToday };
+function toMinutes(time) {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function fromMinutes(total) {
+  return (
+    String(Math.floor(total / 60)).padStart(2, "0") +
+    ":" +
+    String(total % 60).padStart(2, "0")
+  );
+}
+
+// Every bookable start time. The last one still ends before closing.
+// [{openTime, closeTime, slotMinutes, durationMinutes}] -> ["11:00", "11:30", ... "21:00"]
+function buildSlots(cfg) {
+  const slots = [];
+  const last = toMinutes(cfg.closeTime) - cfg.durationMinutes;
+  for (let m = toMinutes(cfg.openTime); m <= last; m += cfg.slotMinutes)
+    slots.push(fromMinutes(m));
+  return slots;
+}
+
+// "19:00" -> "7:00 PM" (for messages)
+function formatClock(time) {
+  const [h, m] = time.split(":").map(Number);
+  return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
+}
+
+module.exports = {
+  toInstant,
+  addMinutes,
+  timeOf,
+  restaurantToday,
+  toMinutes,
+  fromMinutes,
+  buildSlots,
+  formatClock,
+};

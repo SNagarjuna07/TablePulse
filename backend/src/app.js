@@ -16,6 +16,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/config', require('./routes/config.routes'));
+app.use('/api/availability', require('./routes/availability.routes'));
 // Later steps mount more routes here (config, availability, reservations, floor, tables).
 app.use(notFound);
 app.use(errorHandler);
