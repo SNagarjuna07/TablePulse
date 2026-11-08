@@ -1,5 +1,9 @@
 require('dotenv').config();
 
+if (process.env.DNS_SERVERS) {
+  require('dns').setServers(process.env.DNS_SERVERS.split(',').map(s => s.trim()));
+}
+
 function required(name) {
   const value = process.env[name];
   if (!value) {
@@ -12,5 +16,7 @@ function required(name) {
 module.exports = {
   port: Number(process.env.PORT) || 3000,
   mongoUri: required('MONGODB_URI'),
-  clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:4200'
+  clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:4200',
+  jwtSecret: required('JWT_SECRET'),
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d'
 };

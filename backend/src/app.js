@@ -14,9 +14,8 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
-// Later steps mount their routes here, for example:
-// app.use('/api/auth', require('./routes/auth.routes'));
-
+app.use('/api/auth', require('./routes/auth.routes'));
+// Later steps mount more routes here (config, availability, reservations, floor, tables).
 app.use(notFound);
 app.use(errorHandler);
 
