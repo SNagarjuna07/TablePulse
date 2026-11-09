@@ -1,4 +1,14 @@
+// Same rules as the frontend (js/core/validation.js). The server never trusts the browser.
+const {
+  toInstant,
+  restaurantToday,
+  buildSlots,
+  formatClock,
+} = require("./time");
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const PREFS = ["window", "quiet", "outdoor", "centre", "any"];
 
 function validateRegister(input) {
   const errors = {};
@@ -22,4 +32,68 @@ function validateLogin(input) {
   return errors;
 }
 
-module.exports = { EMAIL_RE, validateRegister, validateLogin };
+// Date and time of a booking: a real date, not in the past, on a bookable slot, with enough notice.
+// "now" can be passed in so tests can fake the clock.
+function validateSlot(date, time, cfg, now = new Date()) {
+  const errors = {};
+
+  if (
+    typeof date !== "string" ||
+    !DATE_RE.test(date) ||
+    toInstant(date, "00:00") === null
+  ) {
+    errors.date = "Please choose a reservation date.";
+  } else if (date < restaurantToday(now)) {
+    errors.date = "The reservation date cannot be in the past.";
+  }
+
+  const slots = buildSlots(cfg);
+  if (typeof time !== "string" || !time) {
+    errors.time = "Please choose a reservation time.";
+  } else if (!slots.includes(time)) {
+    errors.time = `Choose a time between ${formatClock(slots[0])} and ${formatClock(slots[slots.length - 1])}.`;
+  } else if (
+    !errors.date &&
+    toInstant(date, time).getTime() < now.getTime() + cfg.minLeadMinutes * 60000
+  ) {
+    errors.time =
+      cfg.minLeadMinutes > 0
+        ? `Please book at least ${cfg.minLeadMinutes} minutes ahead.`
+        : "That time has already passed.";
+  }
+  return errors;
+}
+
+// Reads ?date=&time=&guests=&pref= (all arrive as text). Returns { errors, value }.
+function parseSearch(query, cfg, now = new Date()) {
+  const errors = {};
+  const guests =
+    typeof query.guests === "string" && /^\d+$/.test(query.guests)
+      ? Number(query.guests)
+      : NaN;
+
+  if (!Number.isInteger(guests) || guests < 1)
+    errors.guests = "Please choose the number of guests.";
+  else if (guests > cfg.maxPartySize) {
+    errors.guests = `Our largest table seats ${cfg.maxPartySize}. For bigger groups, please call the restaurant.`;
+  }
+
+  const pref = query.pref === undefined ? "any" : query.pref;
+  if (!PREFS.includes(pref)) errors.pref = "Choose a valid seating preference.";
+
+  Object.assign(errors, validateSlot(query.date, query.time, cfg, now));
+  return {
+    errors,
+    value: { date: query.date, time: query.time, guests, pref },
+  };
+}
+
+module.exports = {
+  EMAIL_RE,
+  DATE_RE,
+  PREFS,
+  validateRegister,
+  validateLogin,
+  validateSlot,
+  parseSearch,
+};
