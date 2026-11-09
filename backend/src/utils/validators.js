@@ -9,6 +9,12 @@ const {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const PREFS = ["window", "quiet", "outdoor", "centre", "any"];
+const OBJECT_ID_RE = /^[a-f\d]{24}$/i;
+
+// "98765 43210" or "98765-43210" -> "9876543210"
+function normalizePhone(phone) {
+  return String(phone || "").replace(/[\s-]/g, "");
+}
 
 function validateRegister(input) {
   const errors = {};
@@ -88,12 +94,50 @@ function parseSearch(query, cfg, now = new Date()) {
   };
 }
 
+// Body of POST /api/reservations (JSON, so guests is a real number here).
+// Same rules as the frontend booking form, plus table id and field types.
+function validateBooking(input, cfg, now = new Date()) {
+  const errors = {};
+
+  if (typeof input.tableId !== "string" || !OBJECT_ID_RE.test(input.tableId))
+    errors.tableId = "Please choose a table.";
+  if (typeof input.name !== "string" || input.name.trim().length < 2)
+    errors.name = "Please enter your full name.";
+  if (typeof input.email !== "string" || !EMAIL_RE.test(input.email.trim()))
+    errors.email = "Please enter a valid email address.";
+  if (
+    typeof input.phone !== "string" ||
+    !/^\d{10}$/.test(normalizePhone(input.phone))
+  )
+    errors.phone = "Phone number must be 10 digits.";
+
+  if (!Number.isInteger(input.guests) || input.guests < 1)
+    errors.guests = "Please choose the number of guests.";
+  else if (input.guests > cfg.maxPartySize) {
+    errors.guests = `Our largest table seats ${cfg.maxPartySize}. For bigger groups, please call the restaurant.`;
+  }
+
+  if (input.pref !== undefined && !PREFS.includes(input.pref))
+    errors.pref = "Choose a valid seating preference.";
+  if (
+    input.requests !== undefined &&
+    (typeof input.requests !== "string" || input.requests.length > 200)
+  ) {
+    errors.requests = "Special requests must be at most 200 characters.";
+  }
+
+  Object.assign(errors, validateSlot(input.date, input.time, cfg, now));
+  return errors;
+}
+
 module.exports = {
   EMAIL_RE,
   DATE_RE,
   PREFS,
+  normalizePhone,
   validateRegister,
   validateLogin,
   validateSlot,
   parseSearch,
+  validateBooking,
 };
