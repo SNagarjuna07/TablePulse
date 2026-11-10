@@ -1,5 +1,6 @@
 // Run with: npm run demo:overlap
 // Proves the double-booking protection against YOUR database. It cleans up after itself.
+// Exit code 0 = every check behaved as expected, 1 = something is wrong (CI uses this).
 const mongoose = require("mongoose");
 const env = require("../config/env");
 const Table = require("../models/Table");
@@ -12,8 +13,9 @@ const { toInstant, addMinutes } = require("../utils/time");
 const { generateCode } = require("../utils/code");
 
 const DATE = "2099-01-15"; // far in the future so it never mixes with real bookings
+let failed = false;
 
-// A small draft of what step 6 will do: take the slot locks first, then save the reservation.
+// A small draft of what the booking service does: take the slot locks first, then save the reservation.
 async function book(table, user, time) {
   const startAt = toInstant(DATE, time);
   const endAt = addMinutes(startAt, restaurant.durationMinutes);
@@ -55,8 +57,13 @@ async function cancel(reservation) {
   await slotLock.release(reservation._id);
 }
 
-const show = (label, result) =>
-  console.log(`${label.padEnd(44)} ${result ? "BOOKED" : "blocked (overlap)"}`);
+function check(label, result, expectBooked) {
+  const good = Boolean(result) === expectBooked;
+  if (!good) failed = true;
+  console.log(
+    `${label.padEnd(40)} ${(result ? "BOOKED" : "blocked (overlap)").padEnd(18)} ${good ? "ok" : "<-- WRONG"}`,
+  );
+}
 
 async function main() {
   await mongoose.connect(env.mongoUri);
@@ -74,14 +81,22 @@ async function main() {
       `Table ${t1.label}, date ${DATE}, each booking lasts ${restaurant.durationMinutes} minutes\n`,
     );
     const a = await book(t1, user, "19:00");
-    show("A  19:00-21:00", a);
-    show("B  20:00-22:00 (overlaps A)", await book(t1, user, "20:00"));
-    show("C  18:00-20:00 (overlaps A)", await book(t1, user, "18:00"));
-    show("D  21:00-23:00 (right after A)", await book(t1, user, "21:00"));
+    check("A  19:00-21:00", a, true);
+    check("B  20:00-22:00 (overlaps A)", await book(t1, user, "20:00"), false);
+    check("C  18:00-20:00 (overlaps A)", await book(t1, user, "18:00"), false);
+    check(
+      "D  21:00-23:00 (right after A)",
+      await book(t1, user, "21:00"),
+      true,
+    );
 
     await cancel(a);
     console.log("--- A cancelled ---");
-    show("E  19:00-21:00 (A gave it back)", await book(t1, user, "19:00"));
+    check(
+      "E  19:00-21:00 (A gave it back)",
+      await book(t1, user, "19:00"),
+      true,
+    );
 
     console.log(
       "\n10 guests try table",
@@ -91,8 +106,10 @@ async function main() {
     const results = await Promise.all(
       Array.from({ length: 10 }, () => book(t2, user, "19:00")),
     );
+    const booked = results.filter(Boolean).length;
+    if (booked !== 1) failed = true;
     console.log(
-      `  booked: ${results.filter(Boolean).length}, blocked: ${results.filter((r) => !r).length}`,
+      `  booked: ${booked} (expected 1), blocked: ${results.length - booked} (expected 9)`,
     );
   } finally {
     const ids = (await Reservation.find({ date: DATE }).select("_id")).map(
@@ -103,6 +120,8 @@ async function main() {
     console.log("\nDemo data removed.");
     await mongoose.disconnect();
   }
+  console.log(failed ? "\nSOME CHECKS FAILED" : "\nALL CHECKS PASSED");
+  process.exitCode = failed ? 1 : 0;
 }
 
 main().catch((err) => {

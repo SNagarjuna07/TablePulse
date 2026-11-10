@@ -1,5 +1,6 @@
 // Run with: npm run demo:cancel-race
 // 20 "double clicks" cancel the same booking at the same moment. MongoDB must let exactly ONE win.
+// Exit code 0 = exactly one winner, 1 = something is wrong (CI uses this).
 const mongoose = require("mongoose");
 const env = require("../config/env");
 const Table = require("../models/Table");
@@ -19,6 +20,7 @@ async function main() {
   ]);
   if (!table || !user) throw new Error('Run "npm run seed" first.');
 
+  let failed = false;
   try {
     const booking = await reservationService.createReservation(user, {
       tableId: String(table._id),
@@ -45,14 +47,23 @@ async function main() {
       (r) => r.status === "rejected" && r.reason.code === "ALREADY_CANCELLED",
     ).length;
     const other = results.length - winners - already;
+    const row = await Reservation.findById(booking._id);
+    const locksLeft = await SlotLock.countDocuments({
+      reservation: booking._id,
+    });
 
     console.log(`  cancelled (winners):        ${winners}   <- expected 1`);
     console.log(`  ALREADY_CANCELLED replies:  ${already}   <- expected 19`);
     console.log(`  anything else:              ${other}   <- expected 0`);
-    const row = await Reservation.findById(booking._id);
     console.log(
-      `\n  status in database: ${row.status}, slot locks left: ${await SlotLock.countDocuments({ reservation: booking._id })} (expected 0)`,
+      `\n  status in database: ${row.status}, slot locks left: ${locksLeft} (expected 0)`,
     );
+    failed =
+      winners !== 1 ||
+      already !== 19 ||
+      other !== 0 ||
+      row.status !== "cancelled" ||
+      locksLeft !== 0;
   } finally {
     const ids = (await Reservation.find({ date: DATE }).select("_id")).map(
       (r) => r._id,
@@ -62,6 +73,8 @@ async function main() {
     console.log("\nDemo data removed.");
     await mongoose.disconnect();
   }
+  console.log(failed ? "\nSOME CHECKS FAILED" : "\nALL CHECKS PASSED");
+  process.exitCode = failed ? 1 : 0;
 }
 
 main().catch((err) => {
