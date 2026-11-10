@@ -10,6 +10,9 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const PREFS = ["window", "quiet", "outdoor", "centre", "any"];
 const OBJECT_ID_RE = /^[a-f\d]{24}$/i;
+const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+// What a manager can set by hand. "reserved" is never set: it comes from reservations.
+const MANUAL_STATUSES = ["available", "occupied", "cleaning"];
 
 // "98765 43210" or "98765-43210" -> "9876543210"
 function normalizePhone(phone) {
@@ -130,12 +133,42 @@ function validateBooking(input, cfg, now = new Date()) {
   return errors;
 }
 
+// ?date=YYYY-MM-DD for the manager's day list. Past dates are fine (history).
+function validateDay(date) {
+  if (
+    typeof date !== "string" ||
+    !DATE_RE.test(date) ||
+    toInstant(date, "00:00") === null
+  ) {
+    return { date: "Please choose a date." };
+  }
+  return {};
+}
+
+// ?date=&time= for the floor plan. Any real clock time is fine (not only booking slots).
+function validateFloorQuery(query) {
+  const errors = validateDay(query.date);
+  if (typeof query.time !== "string" || !TIME_RE.test(query.time))
+    errors.time = "Please choose a time.";
+  return errors;
+}
+
+function validateTableStatus(input) {
+  return MANUAL_STATUSES.includes(input.status)
+    ? {}
+    : { status: "Status must be available, occupied or cleaning." };
+}
+
 module.exports = {
   EMAIL_RE,
   DATE_RE,
   OBJECT_ID_RE,
   PREFS,
+  MANUAL_STATUSES,
   normalizePhone,
+  validateDay,
+  validateFloorQuery,
+  validateTableStatus,
   validateRegister,
   validateLogin,
   validateSlot,

@@ -15,3 +15,7 @@ exports.mine = async (req, res) => {
 exports.cancel = async (req, res) => {
   res.json(await reservationService.cancelReservation(req.user, req.params.id));
 };
+
+exports.listByDate = async (req, res) => {
+  res.json(await reservationService.listByDate(req.query));
+};

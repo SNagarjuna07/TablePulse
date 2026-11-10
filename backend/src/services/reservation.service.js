@@ -7,6 +7,7 @@ const {
   validateBooking,
   normalizePhone,
   OBJECT_ID_RE,
+  validateDay,
 } = require("../utils/validators");
 const { toInstant, addMinutes } = require("../utils/time");
 const configService = require("./config.service");
@@ -142,4 +143,13 @@ async function cancelReservation(user, id, now = new Date()) {
   return await updated.populate("table");
 }
 
-module.exports = { createReservation, listMine, cancelReservation };
+// Manager: every reservation on one day (cancelled ones too), earliest first.
+async function listByDate(query) {
+  const errors = validateDay(query.date);
+  if (Object.keys(errors).length) throw ApiError.validation(undefined, errors);
+  return Reservation.find({ date: query.date })
+    .sort({ time: 1, createdAt: 1 })
+    .populate("table");
+}
+
+module.exports = { createReservation, listMine, cancelReservation, listByDate };
