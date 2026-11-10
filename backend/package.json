@@ -8,7 +8,8 @@
     "dev": "nodemon src/server.js",
     "seed": "node src/seed/seed.js",
     "demo:overlap": "node src/scripts/overlap-demo.js",
-    "demo:cancel-race": "node src/scripts/cancel-race-demo.js"
+    "demo:cancel-race": "node src/scripts/cancel-race-demo.js",
+    "test": "node --test --test-concurrency=1"
   },
   "keywords": [],
   "type": "commonjs",

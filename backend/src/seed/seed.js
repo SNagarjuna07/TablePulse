@@ -61,7 +61,12 @@ async function main() {
   await mongoose.disconnect();
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// Tests import the functions above; "npm run seed" runs this file directly.
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}
+
+module.exports = { MANAGER, TABLES, seedManager, seedTables };
