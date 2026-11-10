@@ -3,7 +3,11 @@ const Table = require("../models/Table");
 const Reservation = require("../models/Reservation");
 const ApiError = require("../utils/ApiError");
 const codeUtil = require("../utils/code");
-const { validateBooking, normalizePhone } = require("../utils/validators");
+const {
+  validateBooking,
+  normalizePhone,
+  OBJECT_ID_RE,
+} = require("../utils/validators");
 const { toInstant, addMinutes } = require("../utils/time");
 const configService = require("./config.service");
 const slotLock = require("./slotLock.service");
@@ -88,4 +92,54 @@ async function createReservation(user, input, now = new Date()) {
   }
 }
 
-module.exports = { createReservation };
+// The signed-in user's own reservations, newest first.
+async function listMine(user) {
+  return Reservation.find({ user: user._id })
+    .sort({ startAt: -1 })
+    .populate("table");
+}
+
+const alreadyCancelled = () =>
+  ApiError.conflict(
+    "ALREADY_CANCELLED",
+    "This reservation is already cancelled.",
+  );
+const alreadyStarted = () =>
+  ApiError.conflict(
+    "ALREADY_STARTED",
+    "This reservation has already started and cannot be cancelled.",
+  );
+
+// Cancel a reservation. Allowed for its owner or a manager. "now" can be passed in tests.
+// The row is kept (status "cancelled") so there is history; only the slot locks are removed.
+async function cancelReservation(user, id, now = new Date()) {
+  const notFound = () => ApiError.notFound("Reservation not found.");
+  if (!OBJECT_ID_RE.test(id)) throw notFound();
+
+  const found = await Reservation.findById(id);
+  if (!found) throw notFound();
+  if (String(found.user) !== String(user._id) && user.role !== "manager") {
+    throw ApiError.forbidden("You can only cancel your own reservations.");
+  }
+  if (found.status === "cancelled") throw alreadyCancelled();
+  if (found.startAt.getTime() < now.getTime()) throw alreadyStarted();
+
+  // One atomic step: "change it only if it is still confirmed and has not started".
+  // If two cancels arrive together, only one finds a match; the other gets null.
+  const updated = await Reservation.findOneAndUpdate(
+    { _id: id, status: "confirmed", startAt: { $gte: now } },
+    { $set: { status: "cancelled", cancelledAt: now } },
+    { returnDocument: "after" },
+  );
+  if (!updated) {
+    const latest = await Reservation.findById(id);
+    throw latest && latest.status === "cancelled"
+      ? alreadyCancelled()
+      : alreadyStarted();
+  }
+
+  await slotLock.release(updated._id); // the table is free for someone else again
+  return await updated.populate("table");
+}
+
+module.exports = { createReservation, listMine, cancelReservation };

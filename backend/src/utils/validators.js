@@ -133,6 +133,7 @@ function validateBooking(input, cfg, now = new Date()) {
 module.exports = {
   EMAIL_RE,
   DATE_RE,
+  OBJECT_ID_RE,
   PREFS,
   normalizePhone,
   validateRegister,
