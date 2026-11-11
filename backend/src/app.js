@@ -19,7 +19,7 @@ app.use("/api/config", require("./routes/config.routes"));
 app.use("/api/availability", require("./routes/availability.routes"));
 app.use("/api/reservations", require("./routes/reservation.routes"));
 app.use('/api/floor', require('./routes/floor.routes'));
-app.use('/api/tables', require('./routes/floor.routes'));
+app.use('/api/tables', require('./routes/tables.routes'));
 
 app.use(notFound);
 app.use(errorHandler);

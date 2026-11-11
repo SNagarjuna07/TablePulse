@@ -52,4 +52,4 @@ async function release(reservationId) {
   await SlotLock.deleteMany({ reservation: reservationId });
 }
 
-module.exports = { CELL_MINUTES, cellsFor, claim, release };
+module.exports = { CELL_MINUTES, cellsFor, isDuplicateKey, claim, release };
