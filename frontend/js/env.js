@@ -3,5 +3,5 @@
 //   useMockApi: false -> real REST API (Express on port 3000)
 window.TP_ENV = {
   apiUrl: '/api',      // "npm start" proxies /api to http://localhost:3000
-  useMockApi: true
+  useMockApi: false
 };

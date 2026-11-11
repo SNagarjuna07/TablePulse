@@ -18,8 +18,12 @@ app.use("/api/auth", require("./routes/auth.routes"));
 app.use("/api/config", require("./routes/config.routes"));
 app.use("/api/availability", require("./routes/availability.routes"));
 app.use("/api/reservations", require("./routes/reservation.routes"));
-app.use('/api/floor', require('./routes/floor.routes'));
-app.use('/api/tables', require('./routes/tables.routes'));
+app.use("/api/floor", require("./routes/floor.routes"));
+app.use("/api/tables", require("./routes/tables.routes"));
+
+// Interactive API docs (Swagger UI). Switch off with ENABLE_DOCS=false.
+if (process.env.ENABLE_DOCS !== "false")
+  app.use("/api/docs", require("./docs/swagger"));
 
 app.use(notFound);
 app.use(errorHandler);
